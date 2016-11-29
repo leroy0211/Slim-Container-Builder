@@ -3,16 +3,21 @@
 require_once("vendor/autoload.php");
 
 $containerBuilder = new \Flexsounds\Slim\ContainerBuilder\ContainerBuilder();
-$containerBuilder->
+
+$containerBuilder->loadFiles(__DIR__. "/config.yml");
+;
 
 $slim = new Slim\App($containerBuilder->getContainer());
 
 
+
 $slim->get('/', function($request, $response){
 
-    $a = $this->has('fiets');
+    $fiets = $this->get('fiets');
+    echo $fiets->test();
 
-    var_dump($a);
+    $john = $this->get('john');
+    echo $john->test();
 
 });
 

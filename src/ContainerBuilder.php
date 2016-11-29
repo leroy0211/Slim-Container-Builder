@@ -15,7 +15,9 @@ use Slim\Container;
 
 class ContainerBuilder
 {
+    /** @var ContainerInterface|Container  */
     private $container;
+    private $booted = false;
     private $configFiles = array();
 
     public function __construct(ContainerInterface $container = null)
@@ -36,41 +38,98 @@ class ContainerBuilder
         ksort($files);
 
         $this->configFiles = $files;
+        return $this;
     }
 
-
-
-
+    /**
+     * Load the container with generated services
+     *
+     * @return ContainerInterface|Container
+     * @throws \Exception
+     */
     public function getContainer()
     {
+        $config = $this->loadConfig($this->configFiles);
 
+        if($this->booted){
+            return $this->container;
+        }
 
+        $this->generateServices($config);
 
+        $this->booted = true;
 
         return $this->container;
     }
 
-
-
-
-    private function loadYaml($env, &$parameters = array())
+    /**
+     * Generate a set of services based on configuration
+     *
+     * @param $config
+     * @throws \Exception
+     */
+    private function generateServices(array $config)
     {
+        if(isset($config['services'])){
+
+            foreach($config['services'] as $servicename => $serviceConfiguration){
+
+                if($this->container->has($servicename)){
+                    throw new \Exception(sprintf("Service with servicename '%s' already exists", $servicename));
+                }
+                $this->container[$servicename] = function() use ($serviceConfiguration){
+                    return call_user_func(array($this, 'createService'), $serviceConfiguration);
+                };
+            }
+        }
+    }
+
+    /**
+     * Create a single service based on some array configuration
+     *
+     * @param $serviceConfiguration
+     * @return object
+     * @throws \Exception
+     */
+    private function createService($serviceConfiguration)
+    {
+        if(!isset($serviceConfiguration['class'])){
+            throw new \Exception("Cannot create a service without a class definition");
+        }
+
+        $objectReflection = new \ReflectionClass($serviceConfiguration['class']);
+        if(isset($serviceConfiguration['arguments'])){
+            $object = $objectReflection->newInstanceArgs($serviceConfiguration['arguments'] ?: null);
+        }else{
+            $object = $objectReflection->newInstance();
+        }
+
+        return $object;
+    }
 
 
-
-
-
-
-
-        $env = pathinfo($env, PATHINFO_FILENAME);
+    /**
+     * Dynamically load a configuration file,
+     * parse parameters (reusable variables)
+     * parse imports (load extra configuration from inside a configuration)
+     *
+     * @param $file
+     * @param array $parameters
+     * @return array|null
+     */
+    private function loadConfig($file, &$parameters = array())
+    {
+        if(is_array($file)){
+            $file = reset($file);
+        }
 
         try{
-            $file = realpath(__DIR__. "/copydb/".$env.".yml");
-            $content = \Symfony\Component\Yaml\Yaml::parse(file_get_contents($file));
+            $file = realpath($file);
+            $content = Config::load($file)->all();
 
             if(isset($content['imports'])){
                 foreach($content['imports'] as $import){
-                    if($extraContent = $this->loadYaml($import['resource'], $parameters)){
+                    if($extraContent = $this->loadConfig($import['resource'], $parameters)){
                         $content = array_replace_recursive($extraContent, $content);
                     }
                 }
@@ -96,8 +155,7 @@ class ContainerBuilder
 
             return $content;
 
-        }catch(\Symfony\Component\Yaml\Exception\ParseException $e){
-            $this->displayError(sprintf("Unable to parse the YAML string: %s", $e->getMessage()));
+        }catch(\Exception $e){
             return array();
         }
     }

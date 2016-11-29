@@ -1,0 +1,7 @@
+<config>
+    <services>
+        <john>
+            <class>Flexsounds\Slim\ContainerBuilder\Dummy</class>
+        </john>
+    </services>
+</config>
