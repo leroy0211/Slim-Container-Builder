@@ -19,6 +19,8 @@ class ContainerBuilder
     private $container;
     private $booted = false;
     private $configFiles = array();
+    /** @var Definition[] */
+    private $definitions = array();
 
     public function __construct(ContainerInterface $container = null)
     {
@@ -51,11 +53,19 @@ class ContainerBuilder
     {
         $config = $this->loadConfig($this->configFiles);
 
+
+
         if($this->booted){
             return $this->container;
         }
 
         $this->generateServices($config);
+
+
+//        var_dump($this->container->has('fiets'));
+        die;
+
+
 
         $this->booted = true;
 
@@ -77,35 +87,15 @@ class ContainerBuilder
                 if($this->container->has($servicename)){
                     throw new \Exception(sprintf("Service with servicename '%s' already exists", $servicename));
                 }
-                $this->container[$servicename] = function() use ($serviceConfiguration){
-                    return call_user_func(array($this, 'createService'), $serviceConfiguration);
-                };
+//                $this->container[$servicename] = function() use ($serviceConfiguration){
+//                    return call_user_func(array($this, 'createService'), $serviceConfiguration);
+//                };
+                $this->container[$servicename] = Definition::createDefinition($this->container, $servicename, $serviceConfiguration);
             }
         }
     }
 
-    /**
-     * Create a single service based on some array configuration
-     *
-     * @param $serviceConfiguration
-     * @return object
-     * @throws \Exception
-     */
-    private function createService($serviceConfiguration)
-    {
-        if(!isset($serviceConfiguration['class'])){
-            throw new \Exception("Cannot create a service without a class definition");
-        }
 
-        $objectReflection = new \ReflectionClass($serviceConfiguration['class']);
-        if(isset($serviceConfiguration['arguments'])){
-            $object = $objectReflection->newInstanceArgs($serviceConfiguration['arguments'] ?: null);
-        }else{
-            $object = $objectReflection->newInstance();
-        }
-
-        return $object;
-    }
 
 
     /**
@@ -126,6 +116,9 @@ class ContainerBuilder
         try{
             $file = realpath($file);
             $content = Config::load($file)->all();
+
+            var_dump($content);
+            die;
 
             if(isset($content['imports'])){
                 foreach($content['imports'] as $import){
@@ -156,6 +149,9 @@ class ContainerBuilder
             return $content;
 
         }catch(\Exception $e){
+
+            throw $e;
+
             return array();
         }
     }

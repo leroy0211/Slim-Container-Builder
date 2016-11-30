@@ -1,5 +1,5 @@
-imports:
-  - { resource: 'config.xml' }
+#imports:
+#  - { resource: 'config.xml' }
 
 parameters:
   - jane: poep
@@ -9,4 +9,4 @@ services:
   fiets:
     class: 'Flexsounds\Slim\ContainerBuilder\Dummy'
     arguments:
-      - oepsiedesie
+      - @oepsie

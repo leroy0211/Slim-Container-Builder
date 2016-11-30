@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 require_once("vendor/autoload.php");
 
@@ -10,14 +10,16 @@ $containerBuilder->loadFiles(__DIR__. "/config.yml");
 $slim = new Slim\App($containerBuilder->getContainer());
 
 
-
 $slim->get('/', function($request, $response){
 
     $fiets = $this->get('fiets');
-    echo $fiets->test();
 
-    $john = $this->get('john');
-    echo $john->test();
+    var_dump($fiets);
+
+//    echo $fiets->test();
+
+//    $john = $this->get('john');
+//    echo $john->test();
 
 });
 
