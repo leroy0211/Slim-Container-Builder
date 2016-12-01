@@ -17,11 +17,13 @@ class Definition
     private $name;
     /** @var  Container */
     private $container;
+    private $class;
     private $configuration;
+    private $parameters = array();
 
     function __invoke()
     {
-        return $this->createService($this->configuration);
+        return $this->createService();
     }
 
 
@@ -39,6 +41,22 @@ class Definition
     public function setName($name)
     {
         $this->name = $name;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getClass()
+    {
+        return $this->class;
+    }
+
+    /**
+     * @param mixed $class
+     */
+    public function setClass($class)
+    {
+        $this->class = $class;
     }
 
     /**
@@ -65,18 +83,43 @@ class Definition
         $this->container = $container;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getParameters()
+    {
+        return $this->parameters;
+    }
 
     /**
+     * @param mixed $parameters
+     */
+    public function setParameters($parameters)
+    {
+        $this->parameters = $parameters;
+    }
+
+
+    /**
+     * @param $container
      * @param $name
      * @param $configuration
      * @return static
+     * @throws \Exception
      */
     public static function createDefinition($container, $name, $configuration)
     {
         $definition = new static();
         $definition->setName($name);
+        if(!isset($configuration['class'])){
+            throw new \Exception("Cannot create a service without a class definition");
+        }
+        $definition->setClass($configuration['class']);
         $definition->setConfiguration($configuration);
         $definition->setContainer($container);
+        if(isset($configuration['arguments'])){
+            $definition->setParameters($configuration['arguments']);
+        }
         return $definition;
     }
 
@@ -87,32 +130,31 @@ class Definition
      * @return object
      * @throws \Exception
      */
-    private function createService($serviceConfiguration)
+    private function createService()
     {
-        if(!isset($serviceConfiguration['class'])){
-            throw new \Exception("Cannot create a service without a class definition");
-        }
+        $objectReflection = new \ReflectionClass($this->getClass());
 
-        $objectReflection = new \ReflectionClass($serviceConfiguration['class']);
-        if(isset($serviceConfiguration['arguments'])){
+        $object = null === $objectReflection->getConstructor() ? $objectReflection->newInstance() : $objectReflection->newInstanceArgs($this->getParameters());
 
-            $arguments = $serviceConfiguration['arguments'];
-
-            var_dump($arguments);
-            die;
-
-            foreach($arguments as $argumentKey => $argument){
-                if(preg_match('/\@(.*?)/', $argument, $matches)){
-                    if($this->container->has($matches[1])){
-                        $arguments[$argumentKey] = $this->container->get($matches[1]);
-                    }
-                }
-            }
-
-            $object = $objectReflection->newInstanceArgs($arguments ?: null);
-        }else{
-            $object = $objectReflection->newInstance();
-        }
+//        if(isset($serviceConfiguration['arguments'])){
+//
+//            $arguments = $serviceConfiguration['arguments'];
+//
+//            var_dump($arguments);
+//            die;
+//
+//            foreach($arguments as $argumentKey => $argument){
+//                if(preg_match('/\@(.*?)/', $argument, $matches)){
+//                    if($this->container->has($matches[1])){
+//                        $arguments[$argumentKey] = $this->container->get($matches[1]);
+//                    }
+//                }
+//            }
+//
+//            $object = $objectReflection->newInstanceArgs($arguments ?: null);
+//        }else{
+//            $object = $objectReflection->newInstance();
+//        }
 
         return $object;
     }

@@ -13,7 +13,7 @@ $slim = new Slim\App($containerBuilder->getContainer());
 $slim->get('/', function($request, $response){
 
     $fiets = $this->get('fiets');
-
+    echo '<pre>';
     var_dump($fiets);
 
 //    echo $fiets->test();

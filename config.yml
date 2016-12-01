@@ -6,7 +6,11 @@ parameters:
 
 
 services:
+  oepsie:
+    class: 'Flexsounds\Slim\ContainerBuilder\Dummy'
+    arguments:
+      - 'fietsje'
   fiets:
     class: 'Flexsounds\Slim\ContainerBuilder\Dummy'
     arguments:
-      - @oepsie
+      - '@oepsie'

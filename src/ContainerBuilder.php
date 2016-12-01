@@ -53,19 +53,13 @@ class ContainerBuilder
     {
         $config = $this->loadConfig($this->configFiles);
 
-
-
         if($this->booted){
             return $this->container;
         }
 
         $this->generateServices($config);
 
-
-//        var_dump($this->container->has('fiets'));
-        die;
-
-
+        $this->attachServices();
 
         $this->booted = true;
 
@@ -83,18 +77,39 @@ class ContainerBuilder
         if(isset($config['services'])){
 
             foreach($config['services'] as $servicename => $serviceConfiguration){
-
                 if($this->container->has($servicename)){
                     throw new \Exception(sprintf("Service with servicename '%s' already exists", $servicename));
                 }
-//                $this->container[$servicename] = function() use ($serviceConfiguration){
-//                    return call_user_func(array($this, 'createService'), $serviceConfiguration);
-//                };
-                $this->container[$servicename] = Definition::createDefinition($this->container, $servicename, $serviceConfiguration);
+                $this->definitions[$servicename] = Definition::createDefinition($this->container, $servicename, $serviceConfiguration);
             }
         }
     }
 
+    private function attachServices()
+    {
+        foreach($this->definitions as $servicename => $definition){
+            $arguments = $this->resolveServices($definition->getParameters());
+            $definition->setParameters($arguments);
+            $this->container[$servicename] = $definition;
+        }
+    }
+
+
+    private function resolveServices($value)
+    {
+        if(is_array($value)){
+            foreach($value as $k => $v){
+                $value[$k] = $this->resolveServices($v);
+            }
+        }elseif(preg_match('/\@(.*?)$/', $value, $matches)){
+            $servicename = isset($matches[1]) ? $matches[1] : false;
+            if(array_key_exists($servicename, $this->definitions)){
+                $value = $this->definitions[$servicename]->__invoke();
+            }
+        }
+
+        return $value;
+    }
 
 
 
@@ -116,9 +131,6 @@ class ContainerBuilder
         try{
             $file = realpath($file);
             $content = Config::load($file)->all();
-
-            var_dump($content);
-            die;
 
             if(isset($content['imports'])){
                 foreach($content['imports'] as $import){
