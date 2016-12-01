@@ -19,8 +19,6 @@ class ContainerBuilder
     private $container;
     private $booted = false;
     private $configFiles = array();
-    /** @var Definition[] */
-    private $definitions = array();
 
     public function __construct(ContainerInterface $container = null)
     {
@@ -57,60 +55,67 @@ class ContainerBuilder
             return $this->container;
         }
 
-        $this->generateServices($config);
+        $this->container['services'] = array();
 
-        $this->attachServices();
+        $this->parseDefinitions($config);
+
+        $this->build();
 
         $this->booted = true;
 
         return $this->container;
     }
 
-    /**
-     * Generate a set of services based on configuration
-     *
-     * @param $config
-     * @throws \Exception
-     */
-    private function generateServices(array $config)
-    {
-        if(isset($config['services'])){
 
-            foreach($config['services'] as $servicename => $serviceConfiguration){
-                if($this->container->has($servicename)){
-                    throw new \Exception(sprintf("Service with servicename '%s' already exists", $servicename));
+    private function parseDefinitions($config)
+    {
+        if(!isset($config['services'])){
+            return;
+        }
+
+        $services = array();
+
+        foreach($config['services'] as $id => $serviceConfiguration){
+            $services[$id] = Definition::createDefinition($serviceConfiguration);
+        }
+
+        $this->container['services'] = $services;
+    }
+
+
+    private function build()
+    {
+        if($this->container->has('services')){
+            foreach ($this->container->get('services') as $serviceName => $serviceConf) {
+                $serviceCallback = function () use ($serviceConf) {
+                    $class  = new \ReflectionClass($serviceConf->getClass());
+                    $params = [];
+                    foreach ((array)$serviceConf->getArguments() as $argument) {
+                        $params[] = $this->decodeArgument($argument);
+                    }
+                    return $class->newInstanceArgs($params);
+                };
+
+                if ($serviceConf->isFactory()) {
+                    $this->container[$serviceName] = $this->container->factory($serviceCallback);
+                } else {
+                    $this->container[$serviceName] = $serviceCallback;
                 }
-                $this->definitions[$servicename] = Definition::createDefinition($this->container, $servicename, $serviceConfiguration);
             }
         }
     }
 
-    private function attachServices()
+    private function decodeArgument($value)
     {
-        foreach($this->definitions as $servicename => $definition){
-            $arguments = $this->resolveServices($definition->getParameters());
-            $definition->setParameters($arguments);
-            $this->container[$servicename] = $definition;
-        }
-    }
-
-
-    private function resolveServices($value)
-    {
-        if(is_array($value)){
-            foreach($value as $k => $v){
-                $value[$k] = $this->resolveServices($v);
-            }
-        }elseif(preg_match('/\@(.*?)$/', $value, $matches)){
-            $servicename = isset($matches[1]) ? $matches[1] : false;
-            if(array_key_exists($servicename, $this->definitions)){
-                $value = $this->definitions[$servicename]->__invoke();
+        if (is_string($value)) {
+            if (0 === strpos($value, '@')) {
+                $value = $this->container[substr($value, 1)];
+            } elseif (0 === strpos($value, '%')) {
+                $value = $this->container[substr($value, 1, -1)];
             }
         }
-
         return $value;
     }
-
 
 
     /**
@@ -118,9 +123,10 @@ class ContainerBuilder
      * parse parameters (reusable variables)
      * parse imports (load extra configuration from inside a configuration)
      *
-     * @param $file
+     * @param       $file
      * @param array $parameters
      * @return array|null
+     * @throws \Exception
      */
     private function loadConfig($file, &$parameters = array())
     {

@@ -1,46 +1,50 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: leroy
- * Date: 30/11/2016
- * Time: 13:40
- */
 
 namespace Flexsounds\Slim\ContainerBuilder;
 
-
-use Slim\Container;
-
 class Definition
 {
-
-    private $name;
-    /** @var  Container */
-    private $container;
+    /**
+     * @var
+     */
     private $class;
-    private $configuration;
-    private $parameters = array();
+    /**
+     * @var
+     */
+    protected $arguments;
+    /**
+     * @var bool
+     */
+    protected $factory = false;
 
-    function __invoke()
+
+    public static function createDefinition($serviceConfiguration)
     {
-        return $this->createService();
+        $definition = new static();
+
+        if (isset($serviceConfiguration['class'])) {
+            $definition->setClass($serviceConfiguration['class']);
+        }
+
+        if (isset($serviceConfiguration['arguments'])) {
+            $definition->setArguments($serviceConfiguration['arguments']);
+        }
+
+        if (isset($serviceConfiguration['factory'])) {
+            $definition->setFactory($serviceConfiguration['factory']);
+        }
+
+        return $definition;
     }
 
-
     /**
-     * @return mixed
+     * @param $class
+     * @return $this
      */
-    public function getName()
+    public function setClass($class)
     {
-        return $this->name;
-    }
-
-    /**
-     * @param mixed $name
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
+        $this->class = $class;
+        return $this;
     }
 
     /**
@@ -52,111 +56,38 @@ class Definition
     }
 
     /**
-     * @param mixed $class
+     * @param array $arguments
+     * @return $this
      */
-    public function setClass($class)
+    public function setArguments(array $arguments)
     {
-        $this->class = $class;
+        $this->arguments = $arguments;
+        return $this;
     }
 
     /**
      * @return mixed
      */
-    public function getConfiguration()
+    public function getArguments()
     {
-        return $this->configuration;
+        return $this->arguments;
     }
 
     /**
-     * @param mixed $configuration
+     * @param $factory
+     * @return $this
      */
-    public function setConfiguration($configuration)
+    public function setFactory($factory)
     {
-        $this->configuration = $configuration;
+        $this->factory = (bool) $factory;
+        return $this;
     }
 
     /**
-     * @param mixed $container
+     * @return bool
      */
-    public function setContainer($container)
+    public function isFactory()
     {
-        $this->container = $container;
+        return $this->factory;
     }
-
-    /**
-     * @return mixed
-     */
-    public function getParameters()
-    {
-        return $this->parameters;
-    }
-
-    /**
-     * @param mixed $parameters
-     */
-    public function setParameters($parameters)
-    {
-        $this->parameters = $parameters;
-    }
-
-
-    /**
-     * @param $container
-     * @param $name
-     * @param $configuration
-     * @return static
-     * @throws \Exception
-     */
-    public static function createDefinition($container, $name, $configuration)
-    {
-        $definition = new static();
-        $definition->setName($name);
-        if(!isset($configuration['class'])){
-            throw new \Exception("Cannot create a service without a class definition");
-        }
-        $definition->setClass($configuration['class']);
-        $definition->setConfiguration($configuration);
-        $definition->setContainer($container);
-        if(isset($configuration['arguments'])){
-            $definition->setParameters($configuration['arguments']);
-        }
-        return $definition;
-    }
-
-    /**
-     * Create a single service based on some array configuration
-     *
-     * @param $serviceConfiguration
-     * @return object
-     * @throws \Exception
-     */
-    private function createService()
-    {
-        $objectReflection = new \ReflectionClass($this->getClass());
-
-        $object = null === $objectReflection->getConstructor() ? $objectReflection->newInstance() : $objectReflection->newInstanceArgs($this->getParameters());
-
-//        if(isset($serviceConfiguration['arguments'])){
-//
-//            $arguments = $serviceConfiguration['arguments'];
-//
-//            var_dump($arguments);
-//            die;
-//
-//            foreach($arguments as $argumentKey => $argument){
-//                if(preg_match('/\@(.*?)/', $argument, $matches)){
-//                    if($this->container->has($matches[1])){
-//                        $arguments[$argumentKey] = $this->container->get($matches[1]);
-//                    }
-//                }
-//            }
-//
-//            $object = $objectReflection->newInstanceArgs($arguments ?: null);
-//        }else{
-//            $object = $objectReflection->newInstance();
-//        }
-
-        return $object;
-    }
-
 }

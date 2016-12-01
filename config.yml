@@ -6,11 +6,18 @@ parameters:
 
 
 services:
-  oepsie:
+
+  flexsounds.test.a:
     class: 'Flexsounds\Slim\ContainerBuilder\Dummy'
     arguments:
-      - 'fietsje'
+      - '@settings'
+
+  flexsounds.test.b:
+      class: 'Flexsounds\Slim\ContainerBuilder\Dummy'
+      arguments:
+        - '@flexsounds.test.a'
+
   fiets:
-    class: 'Flexsounds\Slim\ContainerBuilder\Dummy'
-    arguments:
-      - '@oepsie'
+      class: 'Flexsounds\Slim\ContainerBuilder\Dummy'
+      arguments:
+        - '@flexsounds.test.b'
