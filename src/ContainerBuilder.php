@@ -43,15 +43,16 @@ class ContainerBuilder
      */
     public function getContainer()
     {
-        $config = $this->loader->load(null, $this->container->settings);
-
         if($this->booted){
             return $this->container;
         }
 
-        $this->container['services'] = array();
+        if($this->loader instanceof LoaderInterface){
+            $config = $this->loader->load(null, $this->container->settings);
+            $this->container['services'] = array();
 
-        $this->parseDefinitions($config);
+            $this->parseDefinitions($config);
+        }
 
         $this->build();
 

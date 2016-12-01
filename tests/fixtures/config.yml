@@ -1,0 +1,13 @@
+services:
+  test.hello.world:
+    class: 'Flexsounds\Slim\ContainerBuilder\Tests\fixtures\DummyClass'
+
+  test.argument.with.service:
+    class: 'Flexsounds\Slim\ContainerBuilder\Tests\fixtures\DummyClass'
+    arguments:
+      - '@test.hello.world'
+
+  test.argument.with.slim.service:
+    class: 'Flexsounds\Slim\ContainerBuilder\Tests\fixtures\DummyClass'
+    arguments:
+      - '@settings'
