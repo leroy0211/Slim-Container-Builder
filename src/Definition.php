@@ -2,14 +2,20 @@
 
 namespace Flexsounds\Slim\ContainerBuilder;
 
+/**
+ * This class holds the definition of a service
+ *
+ * Class Definition
+ * @package Flexsounds\Slim\ContainerBuilder
+ */
 class Definition
 {
     /**
-     * @var
+     * @var string
      */
     private $class;
     /**
-     * @var
+     * @var array
      */
     protected $arguments;
     /**
@@ -18,7 +24,13 @@ class Definition
     protected $factory = false;
 
 
-    public static function createDefinition($serviceConfiguration)
+    /**
+     * Create a new definition based on configuration
+     *
+     * @param array $serviceConfiguration
+     * @return static
+     */
+    public static function createDefinition(array $serviceConfiguration)
     {
         $definition = new static();
 
@@ -79,7 +91,7 @@ class Definition
      */
     public function setFactory($factory)
     {
-        $this->factory = (bool) $factory;
+        $this->factory = (bool)$factory;
         return $this;
     }
 
