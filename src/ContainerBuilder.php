@@ -1,16 +1,10 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: leroy
- * Date: 28/11/2016
- * Time: 13:07
- */
 
 namespace Flexsounds\Slim\ContainerBuilder;
 
 
+use Flexsounds\Slim\ContainerBuilder\Loader\LoaderInterface;
 use Interop\Container\ContainerInterface;
-use Noodlehaus\Config;
 use Slim\Container;
 
 class ContainerBuilder
@@ -18,7 +12,9 @@ class ContainerBuilder
     /** @var ContainerInterface|Container  */
     private $container;
     private $booted = false;
-    private $configFiles = array();
+
+    /** @var LoaderInterface */
+    private $loader;
 
     public function __construct(ContainerInterface $container = null)
     {
@@ -29,15 +25,13 @@ class ContainerBuilder
         $this->container = $container;
     }
 
-    public function loadFiles($files)
+    /**
+     * @param LoaderInterface $loader
+     * @return $this
+     */
+    public function setLoader(LoaderInterface $loader)
     {
-        if(!is_array($files)){
-            $files = array($files);
-        }
-
-        ksort($files);
-
-        $this->configFiles = $files;
+        $this->loader = $loader;
         return $this;
     }
 
@@ -49,7 +43,7 @@ class ContainerBuilder
      */
     public function getContainer()
     {
-        $config = $this->loadConfig($this->configFiles);
+        $config = $this->loader->load(null, $this->container->settings);
 
         if($this->booted){
             return $this->container;
@@ -67,6 +61,10 @@ class ContainerBuilder
     }
 
 
+    /**
+     * Parse the service definitions from the configuration
+     * @param $config
+     */
     private function parseDefinitions($config)
     {
         if(!isset($config['services'])){
@@ -83,6 +81,9 @@ class ContainerBuilder
     }
 
 
+    /**
+     * Try to build the container
+     */
     private function build()
     {
         if($this->container->has('services')){
@@ -105,6 +106,10 @@ class ContainerBuilder
         }
     }
 
+    /**
+     * @param $value
+     * @return mixed
+     */
     private function decodeArgument($value)
     {
         if (is_string($value)) {
@@ -115,63 +120,6 @@ class ContainerBuilder
             }
         }
         return $value;
-    }
-
-
-    /**
-     * Dynamically load a configuration file,
-     * parse parameters (reusable variables)
-     * parse imports (load extra configuration from inside a configuration)
-     *
-     * @param       $file
-     * @param array $parameters
-     * @return array|null
-     * @throws \Exception
-     */
-    private function loadConfig($file, &$parameters = array())
-    {
-        if(is_array($file)){
-            $file = reset($file);
-        }
-
-        try{
-            $file = realpath($file);
-            $content = Config::load($file)->all();
-
-            if(isset($content['imports'])){
-                foreach($content['imports'] as $import){
-                    if($extraContent = $this->loadConfig($import['resource'], $parameters)){
-                        $content = array_replace_recursive($extraContent, $content);
-                    }
-                }
-            }
-            if(isset($content['parameters'])){
-                foreach($content['parameters'] as $param){
-                    foreach($param as $key => $value){
-                        $parameters[$key] = $value;
-                    }
-                }
-            }
-
-            array_walk_recursive($content, function(&$val, $key) use ($parameters){
-                $matches = null;
-                preg_match('/\%(.*?)\%/', $val, $matches);
-                $param = isset($matches[1]) ? $matches[1] : false;
-                if($param){
-                    if (isset($parameters[$param])) {
-                        $val = str_replace("%$param%", $parameters[$param], $val);
-                    }
-                }
-            });
-
-            return $content;
-
-        }catch(\Exception $e){
-
-            throw $e;
-
-            return array();
-        }
     }
 
 }

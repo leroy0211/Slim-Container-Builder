@@ -1,5 +1,5 @@
-#imports:
-#  - { resource: 'config.xml' }
+imports:
+  - { resource: 'config.xml' }
 
 parameters:
   - jane: poep

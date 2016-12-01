@@ -2,6 +2,9 @@
     <services>
         <john>
             <class>Flexsounds\Slim\ContainerBuilder\Dummy</class>
+            <arguments>
+                <argument>@settings</argument>
+            </arguments>
         </john>
     </services>
 </config>
