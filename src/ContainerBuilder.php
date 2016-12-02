@@ -120,6 +120,11 @@ class ContainerBuilder
                 $value = $this->container[substr($value, 1, -1)];
             }
         }
+        if(is_array($value)){
+            foreach($value as $k => $v){
+                $value[$k] = $this->decodeArgument($v);
+            }
+        }
         return $value;
     }
 
