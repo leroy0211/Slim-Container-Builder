@@ -3,7 +3,10 @@
 require_once("vendor/autoload.php");
 
 $containerBuilder = new \Flexsounds\Slim\ContainerBuilder\ContainerBuilder();
-$containerBuilder->setLoader(new \Flexsounds\Slim\ContainerBuilder\Loader\FileLoader('./config.yml'));
+$containerBuilder->setLoader($loader = new \Flexsounds\Slim\ContainerBuilder\Loader\FileLoader('.'));
+
+$loader->addFile('config.yml');
+
 
 $slim = new Slim\App($containerBuilder->getContainer());
 

@@ -7,10 +7,28 @@ use Noodlehaus\Config;
 class FileLoader implements LoaderInterface
 {
     private $file;
+    private $resourcePath;
 
-    public function __construct($file)
+    public function __construct($resourcePath)
     {
+        $this->resourcePath = realpath($resourcePath);
+    }
+
+    /**
+     * Add a file to load
+     *
+     * @param $file
+     * @return $this
+     */
+    public function addFile($file)
+    {
+        $realFilePath = realpath($this->resourcePath . '/' .$file);
+        if(!file_exists($realFilePath)){
+            throw new \InvalidArgumentException(sprintf("The file %s is not found in %s", $file, $this->resourcePath));
+        }
+
         $this->file = $file;
+        return $this;
     }
 
 
@@ -27,7 +45,7 @@ class FileLoader implements LoaderInterface
     {
         $resource = $resource ?: $this->file;
 
-        $file = realpath($resource);
+        $file = realpath($this->resourcePath. '/' .$resource);
         $content = Config::load($file)->all();
 
         $this->parseImports($content, $parameters);

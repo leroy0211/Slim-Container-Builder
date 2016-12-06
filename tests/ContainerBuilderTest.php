@@ -45,7 +45,9 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase
     private function getContainerFromFile($file = 'config.yml')
     {
         $containerBuilder = new ContainerBuilder();
-        $containerBuilder->setLoader(new FileLoader(__DIR__. '/fixtures/' . $file));
+        $containerBuilder->setLoader($loader = new FileLoader(__DIR__. '/fixtures/'));
+
+        $loader->addFile($file);
 
         $container = $containerBuilder->getContainer();
         return $container;
