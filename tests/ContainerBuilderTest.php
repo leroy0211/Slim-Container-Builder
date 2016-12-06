@@ -42,34 +42,40 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf(DummyClass::class, $container->get('test.hello.world'));
     }
 
-    private function getContainerFromFile()
+    private function getContainerFromFile($file = 'config.yml')
     {
         $containerBuilder = new ContainerBuilder();
-        $containerBuilder->setLoader(new FileLoader(__DIR__. '/fixtures/config.yml'));
+        $containerBuilder->setLoader(new FileLoader(__DIR__. '/fixtures/' . $file));
 
         $container = $containerBuilder->getContainer();
         return $container;
     }
 
-
-    public function testContainerBuilderToLoadServiceFromFile()
+    public function testFilebasedContainerBuilder()
     {
-        $container = $this->getContainerFromFile();
+        $container = $this->getContainerFromFile('config.yml');
+        $this->verifyContainerStructure($container);
+    }
+
+    public function testContainerImports()
+    {
+        $container = $this->getContainerFromFile('configimport.yml');
+        $this->verifyContainerStructure($container);
+    }
+
+    public function testRecursiveContainerImports()
+    {
+        $container = $this->getContainerFromFile('configrecursiveimport.yml');
+        $this->verifyContainerStructure($container);
+    }
+
+    private function verifyContainerStructure(Container $container)
+    {
+
 
         $this->assertInstanceOf(DummyClass::class, $container->get('test.hello.world'));
-    }
-
-    public function testContainerBuilderToLoadCustomServiceInArgument()
-    {
-        $container = $this->getContainerFromFile();
-
         $this->assertInstanceOf(DummyClass::class, $dummyClassService = $container->get('test.argument.with.service'));
         $this->assertInstanceOf(DummyClass::class, $dummyClassService->getParameter());
-    }
-
-    public function testContainerBuilderToLoadSlimServiceInArgument()
-    {
-        $container = $this->getContainerFromFile();
 
         $this->assertInstanceOf(DummyClass::class, $dummyClassSlimService = $container->get('test.argument.with.slim.service'));
         $this->assertInstanceOf(Collection::class, $dummyClassSlimService->getParameter());
