@@ -8,7 +8,8 @@
     "require-dev": {
         "slim/slim": "^3.6",
         "symfony/yaml": "^3.1",
-        "phpunit/phpunit": "^4.8"
+        "phpunit/phpunit": "^4.8",
+        "satooshi/php-coveralls": "dev-master"
     },
     "license": "MIT",
     "authors": [
