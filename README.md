@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.org/leroy0211/Slim-Container-Builder.svg?branch=master)](https://travis-ci.org/leroy0211/Slim-Container-Builder)
+[![Packagist](https://img.shields.io/packagist/dt/flexsounds/slim-container-builder.svg)](https://packagist.org/packages/flexsounds/slim-container-builder)
+[![license](https://img.shields.io/github/license/leroy0211/Slim-Container-Builder.svg)]()
 
 # Slim-Container-Builder
 A tool to build a container from a config file. 
