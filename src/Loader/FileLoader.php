@@ -4,7 +4,7 @@ namespace Flexsounds\Slim\ContainerBuilder\Loader;
 
 use Noodlehaus\Config;
 
-class FileLoader implements LoaderInterface
+class FileLoader extends AbstractLoader
 {
     private $file;
     private $resourcePath;
@@ -22,8 +22,8 @@ class FileLoader implements LoaderInterface
      */
     public function addFile($file)
     {
-        $realFilePath = realpath($this->resourcePath . '/' .$file);
-        if(!file_exists($realFilePath)){
+        $realFilePath = realpath($this->resourcePath . '/' . $file);
+        if (!file_exists($realFilePath)) {
             throw new \InvalidArgumentException(sprintf("The file %s is not found in %s", $file, $this->resourcePath));
         }
 
@@ -45,24 +45,17 @@ class FileLoader implements LoaderInterface
     {
         $resource = $resource ?: $this->file;
 
-        $file = realpath($this->resourcePath. '/' .$resource);
+        $file = realpath($this->resourcePath . '/' . $resource);
         $content = Config::load($file)->all();
 
         $this->parseImports($content, $parameters);
+        $this->parseParameters($content, $parameters);
 
-        if(isset($content['parameters'])){
-            foreach($content['parameters'] as $param){
-                foreach($param as $key => $value){
-                    $parameters[$key] = $value;
-                }
-            }
-        }
-
-        array_walk_recursive($content, function(&$val, $key) use ($parameters){
+        array_walk_recursive($content, function (&$val, $key) use ($parameters) {
             $matches = null;
             preg_match('/\%(.*?)\%/', $val, $matches);
             $param = isset($matches[1]) ? $matches[1] : false;
-            if($param){
+            if ($param) {
                 if (isset($parameters[$param])) {
                     $val = str_replace("%$param%", $parameters[$param], $val);
                 }
@@ -81,12 +74,12 @@ class FileLoader implements LoaderInterface
      */
     protected function parseImports(&$content, &$parameters)
     {
-        if(!isset($content['imports'])){
+        if (!isset($content['imports'])) {
             return $content;
         }
 
-        foreach($content['imports'] as $import){
-            if($importedContent = $this->load($import['resource'], $parameters)){
+        foreach ($content['imports'] as $import) {
+            if ($importedContent = $this->load($import['resource'], $parameters)) {
                 $content = array_replace_recursive($importedContent, $content);
             }
         }
