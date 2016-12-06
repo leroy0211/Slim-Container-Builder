@@ -98,11 +98,11 @@ class ContainerBuilder
                     return $class->newInstanceArgs($params);
                 };
 
-                if ($serviceConf->isFactory()) {
-                    $this->container[$serviceName] = $this->container->factory($serviceCallback);
-                } else {
-                    $this->container[$serviceName] = $serviceCallback;
+                if($serviceConf->isFactory()){
+                    $serviceCallback = $this->container->factory($serviceCallback);
                 }
+
+                $this->container[$serviceName] = $serviceCallback;
             }
         }
     }
