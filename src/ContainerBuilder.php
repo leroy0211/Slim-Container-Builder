@@ -88,6 +88,7 @@ class ContainerBuilder
     private function build()
     {
         if($this->container->has('services')){
+            /** @var Definition $serviceConf */
             foreach ($this->container->get('services') as $serviceName => $serviceConf) {
                 $serviceCallback = function () use ($serviceConf) {
                     $class  = new \ReflectionClass($serviceConf->getClass());
@@ -98,7 +99,7 @@ class ContainerBuilder
                     return $class->newInstanceArgs($params);
                 };
 
-                if($serviceConf->isFactory()){
+                if(!$serviceConf->isShared()){
                     $serviceCallback = $this->container->factory($serviceCallback);
                 }
 

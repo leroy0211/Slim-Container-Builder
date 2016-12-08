@@ -24,8 +24,10 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
             'John' => 'Doe'
         ), $definition->getArguments());
 
-        $this->assertEquals($definition, $definition->setFactory('1'));
-        $this->assertEquals(true, $definition->isFactory());
+
+        $this->assertEquals(true, $definition->isShared());
+        $this->assertEquals($definition, $definition->setShared(false));
+        $this->assertEquals(false, $definition->isShared());
     }
 
 }

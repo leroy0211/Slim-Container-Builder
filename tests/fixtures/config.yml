@@ -11,3 +11,7 @@ services:
     class: 'Flexsounds\Slim\ContainerBuilder\Tests\fixtures\DummyClass'
     arguments:
       - '@settings'
+
+  test.non.shared.service:
+    class: 'Flexsounds\Slim\ContainerBuilder\Tests\fixtures\DummyClass'
+    shared: false

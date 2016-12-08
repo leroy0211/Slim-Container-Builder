@@ -21,7 +21,7 @@ class Definition
     /**
      * @var bool
      */
-    protected $factory = false;
+    protected $shared = true;
 
 
     /**
@@ -42,8 +42,8 @@ class Definition
             $definition->setArguments($serviceConfiguration['arguments']);
         }
 
-        if (isset($serviceConfiguration['factory'])) {
-            $definition->setFactory($serviceConfiguration['factory']);
+        if (isset($serviceConfiguration['shared'])) {
+            $definition->setShared($serviceConfiguration['shared']);
         }
 
         return $definition;
@@ -86,20 +86,22 @@ class Definition
     }
 
     /**
-     * @param $factory
-     * @return $this
+     * @return boolean
      */
-    public function setFactory($factory)
+    public function isShared()
     {
-        $this->factory = (bool)$factory;
-        return $this;
+        return $this->shared;
     }
 
     /**
-     * @return bool
+     * @param boolean $shared
+     * @return $this
      */
-    public function isFactory()
+    public function setShared($shared)
     {
-        return $this->factory;
+        $this->shared = $shared;
+        return $this;
     }
+
+
 }

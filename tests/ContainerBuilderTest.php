@@ -42,6 +42,10 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf(DummyClass::class, $container->get('test.hello.world'));
     }
 
+    /**
+     * @param string $file
+     * @return \Interop\Container\ContainerInterface|Container
+     */
     private function getContainerFromFile($file = 'config.yml')
     {
         $containerBuilder = new ContainerBuilder();
@@ -81,6 +85,27 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase
 
         $this->assertInstanceOf(DummyClass::class, $dummyClassSlimService = $container->get('test.argument.with.slim.service'));
         $this->assertInstanceOf(Collection::class, $dummyClassSlimService->getParameter());
+    }
+
+
+    public function testNonSharedServices()
+    {
+        $container = $this->getContainerFromFile('config.yml');
+
+        $serviceOne = $container->get('test.non.shared.service');
+        $serviceTwo = $container->get('test.non.shared.service');
+
+        $this->assertNotEquals(spl_object_hash($serviceOne), spl_object_hash($serviceTwo));
+    }
+
+    public function testSharedServices()
+    {
+        $container = $this->getContainerFromFile('config.yml');
+
+        $serviceOne = $container->get('test.hello.world');
+        $serviceTwo = $container->get('test.hello.world');
+
+        $this->assertEquals(spl_object_hash($serviceOne), spl_object_hash($serviceTwo));
     }
 
 }
