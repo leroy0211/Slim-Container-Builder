@@ -19,10 +19,8 @@ abstract class AbstractLoader implements LoaderInterface
     protected function parseParameters($content, &$parameters)
     {
         if (isset($content['parameters'])) {
-            foreach ($content['parameters'] as $param) {
-                foreach ($param as $key => $value) {
-                    $parameters[$key] = $value;
-                }
+            foreach ($content['parameters'] as $key => $value) {
+                $parameters[$key] = $value;
             }
         }
     }

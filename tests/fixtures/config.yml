@@ -1,6 +1,9 @@
+parameters:
+  test.dummy.class: 'Flexsounds\Slim\ContainerBuilder\Tests\fixtures\DummyClass'
+
 services:
   test.hello.world:
-    class: 'Flexsounds\Slim\ContainerBuilder\Tests\fixtures\DummyClass'
+    class: %test.dummy.class%
 
   test.argument.with.service:
     class: 'Flexsounds\Slim\ContainerBuilder\Tests\fixtures\DummyClass'
