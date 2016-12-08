@@ -108,4 +108,47 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(spl_object_hash($serviceOne), spl_object_hash($serviceTwo));
     }
 
+
+    public function testRecursiveServiceArguments()
+    {
+        $containerBuilder = new ContainerBuilder();
+
+        $loader = $this->getMockBuilder(FileLoader::class)
+                       ->disableOriginalConstructor()
+                       ->getMock()
+        ;
+
+        $loader->expects($this->once())
+               ->method('load')
+               ->willReturn(array(
+                   'services' => array(
+                       'test.origin.service' => array(
+                           'class' => DummyClass::class
+                       ),
+                       'test.recursive.service' => array(
+                           'class' => DummyClass::class,
+                           'arguments' => array(
+                               array(
+                                   '@test.origin.service'
+                               )
+                           )
+                       )
+                   )
+               ))
+        ;
+
+        $containerBuilder->setLoader($loader);
+        $container = $containerBuilder->getContainer();
+
+        /** @var DummyClass $recursiveService */
+        $recursiveService = $container->get('test.recursive.service');
+        $originService = $container->get('test.origin.service');
+
+        $this->assertInstanceOf(DummyClass::class, $recursiveService);
+
+        $recursiveServiceParameters = $recursiveService->getParameter();
+
+        $this->assertEquals(spl_object_hash($originService), spl_object_hash(reset($recursiveServiceParameters)));
+    }
+
 }
