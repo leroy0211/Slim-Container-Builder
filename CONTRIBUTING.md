@@ -25,6 +25,6 @@ PHPUnit is allready loaded in our `composer.json` file, so just run phpunit from
 vendor/bin/phpunit
 ```
 
-All Pull Requests are built automatically on Travis.
+All Pull Requests are built automatically with [Travis](https://travis-ci.org/leroy0211/Slim-Container-Builder).
 
-Code Coverage is generated with [Coveralls](https://coveralls.io/github/leroy0211/Slim-Container-Builder?branch=master) and [CodeClimate](https://codeclimate.com/github/leroy0211/Slim-Container-Builder)
+Code Coverage is generated on [Coveralls](https://coveralls.io/github/leroy0211/Slim-Container-Builder?branch=master) and [CodeClimate](https://codeclimate.com/github/leroy0211/Slim-Container-Builder)
