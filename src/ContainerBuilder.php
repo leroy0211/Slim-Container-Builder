@@ -3,26 +3,36 @@
 namespace Flexsounds\Slim\ContainerBuilder;
 
 
+use Flexsounds\Slim\ContainerBuilder\Bridge\ContainerBridgeInterface;
 use Flexsounds\Slim\ContainerBuilder\Loader\LoaderInterface;
 use Interop\Container\ContainerInterface;
 use Slim\Container;
 
+/**
+ * Class ContainerBuilder
+ *
+ * @package Flexsounds\Slim\ContainerBuilder
+ */
 class ContainerBuilder
 {
-    /** @var ContainerInterface|Container  */
-    private $container;
+
+    /** @var ContainerBridgeInterface */
+    private $containerBridge;
+
+    /** @var bool */
     private $booted = false;
 
     /** @var LoaderInterface */
     private $loader;
 
-    public function __construct(ContainerInterface $container = null)
+    /**
+     * ContainerBuilder constructor.
+     *
+     * @param ContainerBridgeInterface $containerBridge
+     */
+    public function __construct(ContainerBridgeInterface $containerBridge)
     {
-        if(null == $container){
-            $container = new Container();
-        }
-
-        $this->container = $container;
+        $this->containerBridge = $containerBridge;
     }
 
     /**
@@ -44,12 +54,14 @@ class ContainerBuilder
     public function getContainer()
     {
         if($this->booted){
-            return $this->container;
+            return $this->containerBridge->getContainer();
         }
 
         if($this->loader instanceof LoaderInterface){
-            $config = $this->loader->load(null, $this->container->settings);
-            $this->container['services'] = array();
+            $containerParameters = $this->containerBridge->getParameters();
+            $config = $this->loader->load(null, $containerParameters);
+
+            $this->containerBridge->set('services', array());
 
             $this->parseDefinitions($config);
         }
@@ -58,7 +70,7 @@ class ContainerBuilder
 
         $this->booted = true;
 
-        return $this->container;
+        return $this->containerBridge->getContainer();
     }
 
 
@@ -78,7 +90,7 @@ class ContainerBuilder
             $services[$id] = Definition::createDefinition($serviceConfiguration);
         }
 
-        $this->container['services'] = $services;
+        $this->containerBridge->set('services', $services);
     }
 
 
@@ -87,9 +99,9 @@ class ContainerBuilder
      */
     private function build()
     {
-        if($this->container->has('services')){
+        if($this->containerBridge->has('services')){
             /** @var Definition $serviceConf */
-            foreach ($this->container->get('services') as $serviceName => $serviceConf) {
+            foreach ($this->containerBridge->get('services') as $serviceName => $serviceConf) {
                 $serviceCallback = function () use ($serviceConf) {
                     $class  = new \ReflectionClass($serviceConf->getClass());
                     $params = [];
@@ -100,10 +112,10 @@ class ContainerBuilder
                 };
 
                 if(!$serviceConf->isShared()){
-                    $serviceCallback = $this->container->factory($serviceCallback);
+                    $serviceCallback = $this->containerBridge->createNonShared($serviceCallback);
                 }
 
-                $this->container[$serviceName] = $serviceCallback;
+                $this->containerBridge->set($serviceName, $serviceCallback);
             }
         }
     }
@@ -116,9 +128,9 @@ class ContainerBuilder
     {
         if (is_string($value)) {
             if (0 === strpos($value, '@')) {
-                $value = $this->container[substr($value, 1)];
+                $value = $this->containerBridge->get(substr($value, 1));
             } elseif (0 === strpos($value, '%')) {
-                $value = $this->container[substr($value, 1, -1)];
+                $value = $this->containerBridge->get(substr($value, 1, -1));
             }
         }
         if(is_array($value)){
