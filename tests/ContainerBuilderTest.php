@@ -2,6 +2,7 @@
 
 namespace Flexsounds\Slim\ContainerBuilder\Tests;
 
+use Flexsounds\Slim\ContainerBuilder\Bridge\SlimFrameworkContainerBridge;
 use Flexsounds\Slim\ContainerBuilder\ContainerBuilder;
 use Flexsounds\Slim\ContainerBuilder\Loader\FileLoader;
 use Flexsounds\Slim\ContainerBuilder\Tests\fixtures\DummyClass;
@@ -13,29 +14,29 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase
 
     public function testContainerBuilderWithoutAnything()
     {
-        $containerBuilder = new ContainerBuilder();
+        $containerBuilder = new ContainerBuilder(new SlimFrameworkContainerBridge());
         $this->assertInstanceOf('Interop\Container\ContainerInterface', $containerBuilder->getContainer());
         $this->assertInstanceOf('Slim\Container', $containerBuilder->getContainer());
     }
 
     public function testContainerBuilderToCreateAService()
     {
-        $containerBuilder = new ContainerBuilder();
+        $containerBuilder = new ContainerBuilder(new SlimFrameworkContainerBridge());
 
         $loader = $this->getMockBuilder(FileLoader::class)
-            ->disableOriginalConstructor()
-            ->getMock()
+                       ->disableOriginalConstructor()
+                       ->getMock()
         ;
 
         $loader->expects($this->once())
-            ->method('load')
-            ->willReturn(array(
-                'services' => array(
-                    'test.hello.world' => array(
-                        'class' => DummyClass::class
-                    )
-                )
-            ))
+               ->method('load')
+               ->willReturn(array(
+                   'services' => array(
+                       'test.hello.world' => array(
+                           'class' => DummyClass::class
+                       )
+                   )
+               ))
         ;
         $containerBuilder->setLoader($loader);
         $container = $containerBuilder->getContainer();
@@ -48,8 +49,8 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase
      */
     private function getContainerFromFile($file = 'config.yml')
     {
-        $containerBuilder = new ContainerBuilder();
-        $containerBuilder->setLoader($loader = new FileLoader(__DIR__. '/fixtures/'));
+        $containerBuilder = new ContainerBuilder(new SlimFrameworkContainerBridge());
+        $containerBuilder->setLoader($loader = new FileLoader(__DIR__ . '/fixtures/'));
 
         $loader->addFile($file);
 
@@ -83,7 +84,8 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf(DummyClass::class, $dummyClassService = $container->get('test.argument.with.service'));
         $this->assertInstanceOf(DummyClass::class, $dummyClassService->getParameter());
 
-        $this->assertInstanceOf(DummyClass::class, $dummyClassSlimService = $container->get('test.argument.with.slim.service'));
+        $this->assertInstanceOf(DummyClass::class,
+            $dummyClassSlimService = $container->get('test.argument.with.slim.service'));
         $this->assertInstanceOf(Collection::class, $dummyClassSlimService->getParameter());
     }
 
@@ -111,7 +113,7 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase
 
     public function testRecursiveServiceArguments()
     {
-        $containerBuilder = new ContainerBuilder();
+        $containerBuilder = new ContainerBuilder(new SlimFrameworkContainerBridge());
 
         $loader = $this->getMockBuilder(FileLoader::class)
                        ->disableOriginalConstructor()
@@ -122,11 +124,11 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase
                ->method('load')
                ->willReturn(array(
                    'services' => array(
-                       'test.origin.service' => array(
+                       'test.origin.service'    => array(
                            'class' => DummyClass::class
                        ),
                        'test.recursive.service' => array(
-                           'class' => DummyClass::class,
+                           'class'     => DummyClass::class,
                            'arguments' => array(
                                array(
                                    '@test.origin.service'
@@ -142,7 +144,7 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase
 
         /** @var DummyClass $recursiveService */
         $recursiveService = $container->get('test.recursive.service');
-        $originService = $container->get('test.origin.service');
+        $originService    = $container->get('test.origin.service');
 
         $this->assertInstanceOf(DummyClass::class, $recursiveService);
 
